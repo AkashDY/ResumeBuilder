@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Resume Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .resume-paper {
+            background: linear-gradient(to bottom, #ffffff 0%, #f9f9f9 100%);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .section-divider {
+            border-bottom: 2px dashed #e2e8f0;
+        }
+        .skill-tag {
+            transition: all 0.2s ease;
+        }
+        .skill-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .tone-selector input:checked + label {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        textarea {
+            resize: none;
+        }
+        .job-desc-highlight {
+            background-color: #fef08a;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-blue-600 mb-2">Smart Resume Builder</h1>
+            <p class="text-lg text-gray-600">Create a tailored resume that matches your dream job</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Input Form Section -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Personal Details -->
+                <div class="bg-white rounded-xl shadow-md p-6 fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-blue-100 p-2 rounded-full mr-3">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold">Personal Details</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text" id="fullName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <input type="tel" id="phone" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                            <input type="url" id="linkedin" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="https://linkedin.com/in/yourprofile">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Portfolio/GitHub</label>
+                            <input type="url" id="portfolio" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="https://github.com/yourusername">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                            <input type="text" id="location" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="City, Country">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Professional Summary -->
+                <div class="bg-white rounded-xl shadow-md p-6 fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-blue-100 p-2 rounded-full mr-3">
+                            <i class="fas fa-file-alt text-blue-600"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold">Professional Summary</h2>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Briefly describe yourself (2-3 sentences)</label>
+                        <textarea id="summary" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Experienced professional with expertise in..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Work Experience -->
+                <div class="bg-white rounded-xl shadow-md p-6 fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-briefcase text-blue-600"></i>
+                            </div>
+                            <h2 class="text-xl font-semibold">Work Experience</h2>
+                        </div>
+                        <button id="addExperience" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md flex items-center">
+                            <i class="fas fa-plus mr-1"></i> Add
+                        </button>
+                    </div>
+                    <div id="experienceContainer" class="space-y-4">
+                        <!-- Experience items will be added here -->
+                    </div>
+                </div>
+
+                <!-- Education -->
+                <div class="bg-white rounded-xl shadow-md p-6 fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-graduation-cap text-blue-600"></i>
+                            </div>
+                            <h2 class="text-xl font-semibold">Education</h2>
+                        </div>
+                        <button id="addEducation" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md flex items-center">
+                            <i class="fas fa-plus mr-1"></i> Add
+                        </button>
+                    </div>
+                    <div id="educationContainer" class="space-y-4">
+                        <!-- Education items will be added here -->
+                    </div>
+                </div>
+
+                <!-- Skills -->
+                <div class="bg-white rounded-xl shadow-md p-6 fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-blue-100 p-2 rounded-full mr-3">
+                            <i class="fas fa-code text-blue-600"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold">Skills</h2>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Add your skills (comma separated)</label>
+                        <div class="flex">
+                            <input type="text" id="skillInput" class="flex-grow px-4 py-2 border border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500" placeholder="JavaScript, Python, Project Management">
+                            <button id="addSkill" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md">
+                                Add
+                            </button>
+                        </div>
+                        <div id="skillsContainer" class="flex flex-wrap gap-2 mt-3">
+                            <!-- Skills will be added here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certifications & Projects -->
+                <div class="bg-white rounded-xl shadow-md p-6 fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-award text-blue-600"></i>
+                            </div>
+                            <h2 class="text-xl font-semibold">Certifications & Projects</h2>
+                        </div>
+                        <button id="addCertProject" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md flex items-center">
+                            <i class="fas fa-plus mr-1"></i> Add
+                        </button>
+                    </div>
+                    <div id="certProjectContainer" class="space-y-4">
+                        <!-- Certifications/Projects will be added here -->
+                    </div>
+                </div>
+
+                <!-- Job Description -->
+                <div class="bg-white rounded-xl shadow-md p-6 fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-blue-100 p-2 rounded-full mr-3">
+                            <i class="fas fa-search text-blue-600"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold">Job Description</h2>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Paste the job description you're applying for</label>
+                        <textarea id="jobDescription" rows="6" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Paste the job description here..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Tone Selector -->
+                <div class="bg-white rounded-xl shadow-md p-6 fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-blue-100 p-2 rounded-full mr-3">
+                            <i class="fas fa-comment-dots text-blue-600"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold">Resume Tone</h2>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 tone-selector">
+                        <div>
+                            <input type="radio" id="tone-confident" name="tone" value="confident" class="hidden peer" checked>
+                            <label for="tone-confident" class="block p-3 border-2 border-gray-200 rounded-lg cursor-pointer text-center hover:border-blue-300 peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                                <i class="fas fa-bullhorn text-blue-600 text-xl mb-1"></i>
+                                <div class="font-medium">Confident</div>
+                                <div class="text-xs text-gray-500">Strong, achievement-focused</div>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" id="tone-formal" name="tone" value="formal" class="hidden peer">
+                            <label for="tone-formal" class="block p-3 border-2 border-gray-200 rounded-lg cursor-pointer text-center hover:border-blue-300 peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                                <i class="fas fa-suitcase text-blue-600 text-xl mb-1"></i>
+                                <div class="font-medium">Formal</div>
+                                <div class="text-xs text-gray-500">Professional, traditional</div>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" id="tone-friendly" name="tone" value="friendly" class="hidden peer">
+                            <label for="tone-friendly" class="block p-3 border-2 border-gray-200 rounded-lg cursor-pointer text-center hover:border-blue-300 peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                                <i class="fas fa-smile text-blue-600 text-xl mb-1"></i>
+                                <div class="font-medium">Friendly</div>
+                                <div class="text-xs text-gray-500">Approachable, warm</div>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" id="tone-technical" name="tone" value="technical" class="hidden peer">
+                            <label for="tone-technical" class="block p-3 border-2 border-gray-200 rounded-lg cursor-pointer text-center hover:border-blue-300 peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                                <i class="fas fa-microchip text-blue-600 text-xl mb-1"></i>
+                                <div class="font-medium">Technical</div>
+                                <div class="text-xs text-gray-500">Detailed, specialized</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between mb-8">
+                    <button id="resetForm" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-redo mr-2"></i> Reset
+                    </button>
+                    <div class="space-x-3">
+                        <button id="analyzeJob" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+                            <i class="fas fa-magic mr-2"></i> Tailor Resume
+                        </button>
+                        <button id="generateResume" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md">
+                            <i class="fas fa-file-pdf mr-2"></i> Generate PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resume Preview Section -->
+            <div class="lg:col-span-1 sticky top-8 h-fit">
+                <div class="bg-white resume-paper rounded-xl shadow-lg p-6 mb-4">
+                    <div class="text-center mb-6">
+                        <h1 id="resumeName" class="text-3xl font-bold text-gray-800">Your Name</h1>
+                        <div class="flex justify-center space-x-4 text-sm text-gray-600 mt-2">
+                            <span id="resumeEmail">email@example.com</span>
+                            <span>•</span>
+                            <span id="resumePhone">(123) 456-7890</span>
+                            <span>•</span>
+                            <span id="resumeLocation">City, Country</span>
+                        </div>
+                        <div class="flex justify-center space-x-3 text-sm text-blue-600 mt-1">
+                            <a id="resumeLinkedin" href="#" target="_blank" class="hover:underline">LinkedIn</a>
+                            <span>•</span>
+                            <a id="resumePortfolio" href="#" target="_blank" class="hover:underline">Portfolio</a>
+                        </div>
+                    </div>
+
+                    <div class="section-divider pb-4 mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-user mr-2 text-blue-600"></i> Summary
+                        </h2>
+                        <p id="resumeSummary" class="text-gray-700 mt-2">Experienced professional with a proven track record in...</p>
+                    </div>
+
+                    <div class="section-divider pb-4 mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-briefcase mr-2 text-blue-600"></i> Experience
+                        </h2>
+                        <div id="resumeExperience" class="mt-3 space-y-4">
+                            <div class="experience-item">
+                                <div class="flex justify-between">
+                                    <h3 class="font-semibold text-gray-800">Job Title</h3>
+                                    <span class="text-sm text-gray-600">Start - End</span>
+                                </div>
+                                <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                    <span>Company Name</span>
+                                    <span>Location</span>
+                                </div>
+                                <ul class="list-disc list-inside text-gray-700 text-sm space-y-1 ml-2">
+                                    <li>Responsibility or achievement</li>
+                                    <li>Another key accomplishment</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-divider pb-4 mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-graduation-cap mr-2 text-blue-600"></i> Education
+                        </h2>
+                        <div id="resumeEducation" class="mt-3 space-y-3">
+                            <div class="education-item">
+                                <div class="flex justify-between">
+                                    <h3 class="font-semibold text-gray-800">Degree Name</h3>
+                                    <span class="text-sm text-gray-600">Graduation Year</span>
+                                </div>
+                                <p class="text-sm text-gray-600">University Name</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-divider pb-4 mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-code mr-2 text-blue-600"></i> Skills
+                        </h2>
+                        <div id="resumeSkills" class="flex flex-wrap gap-2 mt-2">
+                            <span class="skill-tag bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">Skill 1</span>
+                            <span class="skill-tag bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">Skill 2</span>
+                        </div>
+                    </div>
+
+                    <div id="resumeCertProjectsSection">
+                        <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-award mr-2 text-blue-600"></i> Certifications & Projects
+                        </h2>
+                        <div id="resumeCertProjects" class="mt-3 space-y-3">
+                            <div class="cert-project-item">
+                                <h3 class="font-semibold text-gray-800">Certification/Project Name</h3>
+                                <p class="text-sm text-gray-600">Issuing Organization</p>
+                                <p class="text-sm text-gray-700 mt-1">Description or details</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="jobAnalysisResults" class="bg-white rounded-xl shadow-md p-6 hidden">
+                    <h2 class="text-xl font-semibold mb-3 flex items-center">
+                        <i class="fas fa-chart-line text-blue-600 mr-2"></i> Job Match Analysis
+                    </h2>
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-medium">Keyword Match</span>
+                            <span id="keywordMatch" class="text-sm font-medium">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="keywordMatchBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-medium mb-2">Suggested Improvements:</h3>
+                        <ul id="suggestionsList" class="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                            <!-- Suggestions will appear here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize the JS variables
+        const { jsPDF } = window.jspdf;
+        
+        // Experience template
+        const experienceTemplate = `
+            <div class="experience-item bg-gray-50 p-4 rounded-lg border border-gray-200 relative group">
+                <button class="absolute top-2 right-2 text-gray-400 hover:text-red-500 hidden group-hover:block remove-item">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md job-title">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md company">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md location">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Dates</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md dates" placeholder="MM/YYYY - MM/YYYY">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Responsibilities & Achievements</label>
+                    <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md description" rows="3" placeholder="Bullet points (one per line)"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Enter each bullet point on a new line</p>
+                </div>
+            </div>
+        `;
+
+        // Education template
+        const educationTemplate = `
+            <div class="education-item bg-gray-50 p-4 rounded-lg border border-gray-200 relative group">
+                <button class="absolute top-2 right-2 text-gray-400 hover:text-red-500 hidden group-hover:block remove-item">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Degree</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md degree">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">School/University</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md school">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md edu-location">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Graduation Year</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md graduation-year" placeholder="YYYY">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Additional Details (optional)</label>
+                    <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md edu-details" rows="2" placeholder="Honors, relevant coursework, etc."></textarea>
+                </div>
+            </div>
+        `;
+
+        // Certification/Project template
+        const certProjectTemplate = `
+            <div class="cert-project-item bg-gray-50 p-4 rounded-lg border border-gray-200 relative group">
+                <button class="absolute top-2 right-2 text-gray-400 hover:text-red-500 hidden group-hover:block remove-item">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md cert-project-type">
+                        <option value="certification">Certification</option>
+                        <option value="project">Project</option>
+                    </select>
+                </div>
+                <div class="mt-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md cert-project-name">
+                </div>
+                <div class="mt-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Organization/Platform</label>
+                    <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md cert-project-org">
+                </div>
+                <div class="mt-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date/Year</label>
+                    <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md cert-project-date" placeholder="YYYY or MM/YYYY">
+                </div>
+                <div class="mt-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md cert-project-desc" rows="2"></textarea>
+                </div>
+            </div>
+        `;
+
+        // Add event listeners when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add experience
+            document.getElementById('addExperience').addEventListener('click', function() {
+                const container = document.getElementById('experienceContainer');
+                const div = document.createElement('div');
+                div.innerHTML = experienceTemplate;
+                container.appendChild(div);
+                
+                // Add remove functionality
+                const removeBtn = div.querySelector('.remove-item');
+                removeBtn.addEventListener('click', function() {
+                    container.removeChild(div);
+                    updateResumePreview();
+                });
+                
+                // Add input listeners for live preview
+                const inputs = div.querySelectorAll('input, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('input', updateResumePreview);
+                });
+            });
+
+            // Add education
+            document.getElementById('addEducation').addEventListener('click', function() {
+                const container = document.getElementById('educationContainer');
+                const div = document.createElement('div');
+                div.innerHTML = educationTemplate;
+                container.appendChild(div);
+                
+                // Add remove functionality
+                const removeBtn = div.querySelector('.remove-item');
+                removeBtn.addEventListener('click', function() {
+                    container.removeChild(div);
+                    updateResumePreview();
+                });
+                
+                // Add input listeners for live preview
+                const inputs = div.querySelectorAll('input, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('input', updateResumePreview);
+                });
+            });
+
+            // Add certification/project
+            document.getElementById('addCertProject').addEventListener('click', function() {
+                const container = document.getElementById('certProjectContainer');
+                const div = document.createElement('div');
+                div.innerHTML = certProjectTemplate;
+                container.appendChild(div);
+                
+                // Add remove functionality
+                const removeBtn = div.querySelector('.remove-item');
+                removeBtn.addEventListener('click', function() {
+                    container.removeChild(div);
+                    updateResumePreview();
+                });
+                
+                // Add input listeners for live preview
+                const inputs = div.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => {
+                    input.addEventListener('input', updateResumePreview);
+                    input.addEventListener('change', updateResumePreview);
+                });
+            });
+
+            // Add skill
+            document.getElementById('addSkill').addEventListener('click', function() {
+                const skillInput = document.getElementById('skillInput');
+                const skills = skillInput.value.split(',').map(skill => skill.trim()).filter(skill => skill !== '');
+                
+                if (skills.length > 0) {
+                    const container = document.getElementById('skillsContainer');
+                    
+                    skills.forEach(skill => {
+                        const span = document.createElement('span');
+                        span.className = 'skill-tag bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full flex items-center';
+                        span.innerHTML = `
+                            ${skill}
+                            <button class="ml-1 text-blue-600 hover:text-blue-800 remove-skill">
+                                <i class="fas fa-times text-xs"></i>
+                            </button>
+                        `;
+                        container.appendChild(span);
+                        
+                        // Add remove functionality
+                        const removeBtn = span.querySelector('.remove-skill');
+                        removeBtn.addEventListener('click', function() {
+                            container.removeChild(span);
+                            updateResumePreview();
+                        });
+                    });
+                    
+                    skillInput.value = '';
+                    updateResumePreview();
+                }
+            });
+
+            // Also allow adding skills by pressing Enter
+            document.getElementById('skillInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('addSkill').click();
+                }
+            });
+
+            // Personal details input listeners
+            const personalInputs = ['fullName', 'email', 'phone', 'linkedin', 'portfolio', 'location', 'summary'];
+            personalInputs.forEach(id => {
+                document.getElementById(id).addEventListener('input', updateResumePreview);
+            });
+
+            // Job description input listener
+            document.getElementById('jobDescription').addEventListener('input', function() {
+                document.getElementById('jobAnalysisResults').classList.add('hidden');
+            });
+
+            // Tone selector listener
+            document.querySelectorAll('input[name="tone"]').forEach(radio => {
+                radio.addEventListener('change', updateResumePreview);
+            });
+
+            // Reset form
+            document.getElementById('resetForm').addEventListener('click', function() {
+                if (confirm('Are you sure you want to reset the form? All your data will be lost.')) {
+                    document.querySelector('form').reset();
+                    document.getElementById('experienceContainer').innerHTML = '';
+                    document.getElementById('educationContainer').innerHTML = '';
+                    document.getElementById('certProjectContainer').innerHTML = '';
+                    document.getElementById('skillsContainer').innerHTML = '';
+                    updateResumePreview();
+                }
+            });
+
+            // Analyze job description
+            document.getElementById('analyzeJob').addEventListener('click', analyzeJobDescription);
+
+            // Generate PDF
+            document.getElementById('generateResume').addEventListener('click', generatePDF);
+
+            // Initialize with one empty experience and education
+            document.getElementById('addExperience').click();
+            document.getElementById('addEducation').click();
+        });
+
+        // Update resume preview
+        function updateResumePreview() {
+            // Personal details
+            document.getElementById('resumeName').textContent = document.getElementById('fullName').value || 'Your Name';
+            document.getElementById('resumeEmail').textContent = document.getElementById('email').value || 'email@example.com';
+            document.getElementById('resumePhone').textContent = document.getElementById('phone').value || '(123) 456-7890';
+            document.getElementById('resumeLocation').textContent = document.getElementById('location').value || 'City, Country';
+            
+            const linkedin = document.getElementById('linkedin').value;
+            const portfolio = document.getElementById('portfolio').value;
+            
+            document.getElementById('resumeLinkedin').textContent = linkedin ? 'LinkedIn' : '';
+            document.getElementById('resumeLinkedin').href = linkedin || '#';
+            document.getElementById('resumePortfolio').textContent = portfolio ? 'Portfolio' : '';
+            document.getElementById('resumePortfolio').href = portfolio || '#';
+            
+            if (!linkedin && !portfolio) {
+                document.querySelectorAll('#resumePortfolio, #resumeLinkedin').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('#resumePortfolio + span, #resumeLinkedin + span').forEach(el => el.style.display = 'none');
+            } else {
+                document.querySelectorAll('#resumePortfolio, #resumeLinkedin').forEach(el => el.style.display = 'inline');
+                document.querySelectorAll('#resumePortfolio + span, #resumeLinkedin + span').forEach(el => {
+                    if (el.previousElementSibling.textContent) {
+                        el.style.display = 'inline';
+                    } else {
+                        el.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Summary
+            document.getElementById('resumeSummary').textContent = document.getElementById('summary').value || 
+                'Experienced professional with a proven track record in...';
+            
+            // Experience
+            const experienceContainer = document.getElementById('resumeExperience');
+            experienceContainer.innerHTML = '';
+            
+            const experienceItems = document.querySelectorAll('#experienceContainer .experience-item');
+            if (experienceItems.length === 0) {
+                experienceContainer.innerHTML = '<p class="text-gray-500 italic">No experience added</p>';
+            } else {
+                experienceItems.forEach(item => {
+                    const jobTitle = item.querySelector('.job-title').value || 'Job Title';
+                    const company = item.querySelector('.company').value || 'Company Name';
+                    const location = item.querySelector('.location').value || '';
+                    const dates = item.querySelector('.dates').value || 'Start - End';
+                    const description = item.querySelector('.description').value || '';
+                    
+                    const div = document.createElement('div');
+                    div.className = 'experience-item mb-4';
+                    
+                    let html = `
+                        <div class="flex justify-between">
+                            <h3 class="font-semibold text-gray-800">${jobTitle}</h3>
+                            <span class="text-sm text-gray-600">${dates}</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>${company}</span>
+                            ${location ? `<span>${location}</span>` : ''}
+                        </div>
+                    `;
+                    
+                    if (description) {
+                        const bullets = description.split('\n').filter(b => b.trim() !== '');
+                        if (bullets.length > 0) {
+                            html += '<ul class="list-disc list-inside text-gray-700 text-sm space-y-1 ml-2">';
+                            bullets.forEach(bullet => {
+                                html += `<li>${bullet}</li>`;
+                            });
+                            html += '</ul>';
+                        }
+                    }
+                    
+                    div.innerHTML = html;
+                    experienceContainer.appendChild(div);
+                });
+            }
+            
+            // Education
+            const educationContainer = document.getElementById('resumeEducation');
+            educationContainer.innerHTML = '';
+            
+            const educationItems = document.querySelectorAll('#educationContainer .education-item');
+            if (educationItems.length === 0) {
+                educationContainer.innerHTML = '<p class="text-gray-500 italic">No education added</p>';
+            } else {
+                educationItems.forEach(item => {
+                    const degree = item.querySelector('.degree').value || 'Degree Name';
+                    const school = item.querySelector('.school').value || 'University Name';
+                    const location = item.querySelector('.edu-location').value || '';
+                    const year = item.querySelector('.graduation-year').value || 'Graduation Year';
+                    const details = item.querySelector('.edu-details').value || '';
+                    
+                    const div = document.createElement('div');
+                    div.className = 'education-item mb-3';
+                    
+                    let html = `
+                        <div class="flex justify-between">
+                            <h3 class="font-semibold text-gray-800">${degree}</h3>
+                            <span class="text-sm text-gray-600">${year}</span>
+                        </div>
+                        <p class="text-sm text-gray-600">${school}${location ? `, ${location}` : ''}</p>
+                    `;
+                    
+                    if (details) {
+                        html += `<p class="text-sm text-gray-700 mt-1">${details}</p>`;
+                    }
+                    
+                    div.innerHTML = html;
+                    educationContainer.appendChild(div);
+                });
+            }
+            
+            // Skills
+            const skillsContainer = document.getElementById('resumeSkills');
+            skillsContainer.innerHTML = '';
+            
+            const skillTags = document.querySelectorAll('#skillsContainer .skill-tag');
+            if (skillTags.length === 0) {
+                skillsContainer.innerHTML = '<p class="text-gray-500 italic">No skills added</p>';
+            } else {
+                skillTags.forEach(tag => {
+                    const skill = tag.textContent.trim();
+                    const span = document.createElement('span');
+                    span.className = 'skill-tag bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full';
+                    span.textContent = skill;
+                    skillsContainer.appendChild(span);
+                });
+            }
+            
+            // Certifications & Projects
+            const certProjectContainer = document.getElementById('resumeCertProjects');
+            certProjectContainer.innerHTML = '';
+            
+            const certProjectItems = document.querySelectorAll('#certProjectContainer .cert-project-item');
+            if (certProjectItems.length === 0) {
+                document.getElementById('resumeCertProjectsSection').style.display = 'none';
+            } else {
+                document.getElementById('resumeCertProjectsSection').style.display = 'block';
+                
+                certProjectItems.forEach(item => {
+                    const type = item.querySelector('.cert-project-type').value;
+                    const name = item.querySelector('.cert-project-name').value || 'Certification/Project Name';
+                    const org = item.querySelector('.cert-project-org').value || '';
+                    const date = item.querySelector('.cert-project-date').value || '';
+                    const desc = item.querySelector('.cert-project-desc').value || '';
+                    
+                    const div = document.createElement('div');
+                    div.className = 'cert-project-item mb-3';
+                    
+                    let html = `
+                        <h3 class="font-semibold text-gray-800">${name}</h3>
+                        ${org ? `<p class="text-sm text-gray-600">${org}${date ? ` • ${date}` : ''}</p>` : ''}
+                    `;
+                    
+                    if (desc) {
+                        html += `<p class="text-sm text-gray-700 mt-1">${desc}</p>`;
+                    }
+                    
+                    div.innerHTML = html;
+                    certProjectContainer.appendChild(div);
+                });
+            }
+        }
+
+        // Analyze job description
+        function analyzeJobDescription() {
+            const jobDesc = document.getElementById('jobDescription').value.trim();
+            if (!jobDesc) {
+                alert('Please paste a job description first.');
+                return;
+            }
+            
+            // Show loading state
+            const analyzeBtn = document.getElementById('analyzeJob');
+            const originalText = analyzeBtn.innerHTML;
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Analyzing...';
+            analyzeBtn.disabled = true;
+            
+            // Simulate analysis (in a real app, this would be an API call)
+            setTimeout(() => {
+                // Extract keywords from job description
+                const keywords = extractKeywords(jobDesc);
+                
+                // Get skills from resume
+                const resumeSkills = [];
+                document.querySelectorAll('#skillsContainer .skill-tag').forEach(tag => {
+                    resumeSkills.push(tag.textContent.trim());
+                });
+                
+                // Calculate match percentage (simplified)
+                const matchedKeywords = keywords.filter(kw => 
+                    resumeSkills.some(skill => 
+                        skill.toLowerCase().includes(kw.toLowerCase()) || 
+                        kw.toLowerCase().includes(skill.toLowerCase())
+                    )
+                );
+                
+                const matchPercentage = Math.round((matchedKeywords.length / keywords.length) * 100);
+                
+                // Update UI with results
+                document.getElementById('keywordMatch').textContent = `${matchPercentage}%`;
+                document.getElementById('keywordMatchBar').style.width = `${matchPercentage}%`;
+                
+                // Generate suggestions
+                const suggestionsList = document.getElementById('suggestionsList');
+                suggestionsList.innerHTML = '';
+                
+                if (matchPercentage < 50) {
+                    addSuggestion(suggestionsList, `Add more relevant skills like: ${keywords.slice(0, 3).join(', ')}`);
+                }
+                
+                if (matchedKeywords.length > 0) {
+                    addSuggestion(suggestionsList, `Highlight these matched skills in your experience: ${matchedKeywords.slice(0, 3).join(', ')}`);
+                } else {
+                    addSuggestion(suggestionsList, 'None of your current skills match the job description. Consider adding relevant skills.');
+                }
+                
+                // Highlight keywords in job description
+                highlightKeywordsInJobDesc(keywords);
+                
+                // Show results
+                document.getElementById('jobAnalysisResults').classList.remove('hidden');
+                
+                // Restore button
+                analyzeBtn.innerHTML = originalText;
+                analyzeBtn.disabled = false;
+            }, 1500);
+        }
+
+        // Helper function to extract keywords from text
+        function extractKeywords(text) {
+            // Simple keyword extraction (in a real app, use NLP or more sophisticated methods)
+            const words = text.toLowerCase()
+                .replace(/[^\w\s]/g, '')
+                .split(/\s+/)
+                .filter(word => word.length > 3 && !commonWords.includes(word));
+            
+            // Count word frequencies and get top 10
+            const wordCounts = {};
+            words.forEach(word => {
+                wordCounts[word] = (wordCounts[word] || 0) + 1;
+            });
+            
+            return Object.keys(wordCounts)
+                .sort((a, b) => wordCounts[b] - wordCounts[a])
+                .slice(0, 10);
+        }
+
+        // Common words to exclude from keywords
+        const commonWords = ['the', 'and', 'for', 'with', 'this', 'that', 'will', 'have', 'which', 'their', 'from', 'your', 'should', 'would', 'other', 'about', 'after', 'before', 'when', 'while', 'where', 'how', 'what', 'who', 'whom', 'whose', 'these', 'those', 'them', 'then', 'than', 'such', 'some', 'into', 'upon'];
+
+        // Add suggestion to list
+        function addSuggestion(list, text) {
+            const li = document.createElement('li');
+            li.textContent = text;
+            list.appendChild(li);
+        }
+
+        // Highlight keywords in job description
+        function highlightKeywordsInJobDesc(keywords) {
+            const jobDescElement = document.getElementById('jobDescription');
+            let text = jobDescElement.value;
+            
+            keywords.forEach(keyword => {
+                const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+                text = text.replace(regex, match => 
+                    `<span class="job-desc-highlight">${match}</span>`
+                );
+            });
+            
+            // Create a preview element with highlights
+            const preview = document.createElement('div');
+            preview.className = 'bg-white p-4 rounded border border-gray-300';
+            preview.innerHTML = text;
+            
+            // Replace the textarea with the highlighted preview
+            jobDescElement.style.display = 'none';
+            jobDescElement.insertAdjacentElement('afterend', preview);
+            
+            // Add button to return to editing
+            const returnBtn = document.createElement('button');
+            returnBtn.className = 'text-sm text-blue-600 hover:text-blue-800 mt-2 flex items-center';
+            returnBtn.innerHTML = '<i class="fas fa-edit mr-1"></i> Edit Job Description';
+            returnBtn.addEventListener('click', function() {
+                preview.remove();
+                returnBtn.remove();
+                jobDescElement.style.display = 'block';
+            });
+            
+            preview.insertAdjacentElement('afterend', returnBtn);
+        }
+
+        // Generate PDF
+        function generatePDF() {
+            // Show loading state
+            const generateBtn = document.getElementById('generateResume');
+            const originalText = generateBtn.innerHTML;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
+            generateBtn.disabled = true;
+            
+            // Get the resume element
+            const resumeElement = document.querySelector('.resume-paper');
+            
+            // Use html2canvas to capture the resume
+            html2canvas(resumeElement, {
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                // Create PDF
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 295; // A4 height in mm
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                
+                // Add image to PDF
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                
+                // Add additional pages if resume is longer than one page
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                while (heightLeft >= pageHeight) {
+                    position = heightLeft - pageHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                // Download the PDF
+                const fileName = document.getElementById('fullName').value || 'resume';
+                pdf.save(`${fileName}-resume.pdf`);
+                
+                // Restore button
+                generateBtn.innerHTML = originalText;
+                generateBtn.disabled = false;
+            }).catch(err => {
+                console.error('Error generating PDF:', err);
+                alert('Error generating PDF. Please try again.');
+                
+                // Restore button
+                generateBtn.innerHTML = originalText;
+                generateBtn.disabled = false;
+            });
+        }
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=akashKaMaal/spaceforapps" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</html>
